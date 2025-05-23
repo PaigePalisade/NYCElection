@@ -7,8 +7,8 @@ name_sheet = load_workbook(filename="2021P_CandidacyID_To_Name.xlsx").active
 id2name = {}
 index2id = [
     "217572",
-    "219469",
     "219978",
+    "219469",
     "218127",
     "218491",
     "217796",
@@ -23,7 +23,7 @@ index2id = [
 
 n = len(index2id)
 
-voteMatrix = [[0 for c in range(n)] for r in range(n)]
+pairwiseMatrix = [[0 for c in range(n)] for r in range(n)]
 
 id2index = {k: v for (k,v) in zip(index2id, range(len(index2id)))}
 
@@ -35,11 +35,17 @@ with open("ballots.pickle", 'rb') as file:
 
 for ballot in ballots:
     for i in range(5):
-        if ballot[i] != 'undervote' and ballot[i] != 'overvote' and ballot[i] != 'Write-in':
+        # ballot is discarded after the first instance of an overvote
+        if ballot[i] == 'overvote':
+            break
+        # undervotes are skipped and we are not counting write-in's for the purpose of this tabulation. if candidate is ranked twice, the second instance is skipped
+        if ballot[i] != 'undervote' and ballot[i] != 'Write-in' and not ballot[i] in ballot[0:i]:
+            # for every other candidate
             for j in range(n):
-                if index2id[j] not in ballot[0:i]:
-                    voteMatrix[id2index[ballot[i]]][j] += ballots[ballot]
-                    voteMatrix[j][id2index[ballot[i]]] -= ballots[ballot]
+                # if they haven't been ranked already
+                if index2id[j] not in ballot[0:i+1]:
+                    # add their vote to the pairwise matrix
+                    pairwiseMatrix[id2index[ballot[i]]][j] += ballots[ballot]
 
 
 print(" " * 21, end="")
@@ -51,9 +57,26 @@ print()
 
 for r in range(n):
     print(f"{id2name[index2id[r]]:20}", end="")
-    for e in voteMatrix[r]:
+    for e in pairwiseMatrix[r]:
         print(f"{e:21}",end="")
     print()
 
+diffMatrix = [[0 for c in range(n)] for r in range(n)]
 
+for r in range(n):
+    for c in range(n):
+        diffMatrix[r][c] = pairwiseMatrix[r][c] - pairwiseMatrix[c][r]
 
+print()
+print(" " * 21, end="")
+
+for i in range(n):
+    print(f"{id2name[index2id[i]]:>21}", end="")
+
+print()
+
+for r in range(n):
+    print(f"{id2name[index2id[r]]:20}", end="")
+    for e in diffMatrix[r]:
+        print(f"{e:21}",end="")
+    print()
