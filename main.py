@@ -2,24 +2,10 @@ from openpyxl import load_workbook
 from os import listdir
 import pickle
 
-name_sheet = load_workbook(filename="2021P_CandidacyID_To_Name.xlsx").active
+name_sheet = load_workbook(filename="Primary Election 2025 - 06-24-2025_CandidacyID_To_Name.xlsx").active
 
 id2name = {}
-index2id = [
-    "217572",
-    "219978",
-    "219469",
-    "218127",
-    "218491",
-    "217796",
-    "217605",
-    "221141",
-    "221183",
-    "218117",
-    "218922",
-    "217654",
-    "221458"
-]
+index2id = ['254365', '255950', '257465', '254130', '254607', '254393', '258719', '258821', '254286', '257441', '254052']
 
 n = len(index2id)
 
@@ -48,35 +34,36 @@ for ballot in ballots:
                     pairwiseMatrix[id2index[ballot[i]]][j] += ballots[ballot]
 
 
-print(" " * 21, end="")
 
-for i in range(n):
-    print(f"{id2name[index2id[i]]:>21}", end="")
+# create a difference matrix
+diffMatrix = [[pairwiseMatrix[r][c] - pairwiseMatrix[c][r] for c in range(n)] for r in range(n)]
 
-print()
+# get candidate order
+wins = []
 
-for r in range(n):
-    print(f"{id2name[index2id[r]]:20}", end="")
-    for e in pairwiseMatrix[r]:
-        print(f"{e:21}",end="")
+for candidate in range(n):
+    w = 0
+    for other in range(n):
+        if (diffMatrix[candidate][other] > 0):
+            w += 1
+    wins.append((candidate, w))
+
+wins.sort(key=lambda x : -x[1])
+
+# print tables
+def print_matrix(m):
+    print(" " * 20, end="")
+    for c in wins:
+        print(f"{id2name[index2id[c[0]]]:>21}", end="")
+
     print()
 
-diffMatrix = [[0 for c in range(n)] for r in range(n)]
-
-for r in range(n):
-    for c in range(n):
-        diffMatrix[r][c] = pairwiseMatrix[r][c] - pairwiseMatrix[c][r]
-
-print()
-print(" " * 21, end="")
-
-for i in range(n):
-    print(f"{id2name[index2id[i]]:>21}", end="")
-
-print()
-
-for r in range(n):
-    print(f"{id2name[index2id[r]]:20}", end="")
-    for e in diffMatrix[r]:
-        print(f"{e:21}",end="")
+    for c in wins:
+        print(f"{id2name[index2id[c[0]]]:20}", end="")
+        for o in wins:
+            print(f"{m[c[0]][o[0]]:21}",end="")
+        print()
     print()
+
+print_matrix(pairwiseMatrix)
+print_matrix(diffMatrix)

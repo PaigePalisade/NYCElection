@@ -5,7 +5,8 @@ import pickle
 ballots = {}
 
 for file in listdir("data"):
-    sheet = load_workbook(filename=f"data/{file}").active
+    book = load_workbook(filename=f"data/{file}")
+    sheet = book.active
     mayor_col = 0
     for row in sheet.iter_rows(max_row=1):
         for cell in row:
@@ -18,6 +19,7 @@ for file in listdir("data"):
         else:
             ballots[ballot_tup] = 1
     print(file)
+    book.close()
 
 with open("ballots.pickle", 'wb') as ballotsFile:
     pickle.dump(ballots, ballotsFile)
